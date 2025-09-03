@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Todo Management App</title>
+  <link rel="stylesheet" href="./Tolistapp/styles.css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 min-h-screen font-sans overscroll-none">
+  <!-- Notification Area -->
+  <div id="notification" class="notification hidden"></div>
+
+  <!-- Modal for Editing -->
+  <div id="editModal" class="modal">
+    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-2xl max-w-md w-full max-h-[90vh] overflow-auto">
+      <h2 class="text-xl font-bold mb-4">Edit Task</h2>
+      <input
+        id="editTaskText"
+        type="text"
+        class="w-full p-3 border border-gray-300 rounded mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600"
+        placeholder="Task text"
+      />
+      <div class="flex justify-end space-x-2">
+        <button id="saveEditBtn" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Save</button>
+        <button id="cancelEditBtn" class="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-4 py-8 max-w-7xl">
+    <!-- Header -->
+    <header
+      class="bg-white/80 dark:bg-gray-800/80 backdrop-blur-lg p-6 rounded-xl shadow-xl mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+    >
+      <h1
+        class="text-4xl font-extrabold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+      >
+        Todo List App
+      </h1>
+      <div
+        class="flex flex-wrap gap-3 justify-start sm:justify-end items-center w-full sm:w-auto"
+      >
+        <input
+          id="searchInput"
+          type="text"
+          placeholder="Search..."
+          class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 flex-grow sm:flex-grow-0 min-w-[150px]"
+        />
+        <button
+          id="darkModeToggle"
+          class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition whitespace-nowrap"
+        >
+          🌙 Dark Mode
+        </button>
+        <button
+          id="exportBtn"
+          class="px-4 py-2 bg-green-500 rounded-lg hover:bg-green-600 text-white whitespace-nowrap"
+        >
+          Export JSON
+        </button>
+        <input
+          id="importInput"
+          type="file"
+          class="hidden"
+          accept=".json"
+          aria-label="Import tasks JSON file"
+        />
+        <button
+          id="importBtn"
+          class="px-4 py-2 bg-yellow-500 rounded-lg hover:bg-yellow-600 text-white whitespace-nowrap"
+        >
+          Import JSON
+        </button>
+      </div>
+    </header>
+
+    <!-- Add New Task Section -->
+    <section
+      class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg p-6 rounded-xl shadow-xl mb-8"
+    >
+      <h2 class="text-2xl font-semibold mb-4">New Task</h2>
+      <form
+        id="addTaskForm"
+        class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5"
+      >
+        <input id="taskInput" type="text" placeholder="Task title..." class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+        <textarea id="taskDescription" placeholder="Description..." class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 resize-none" rows="1"></textarea>
+        <select id="prioritySelect" class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600">
+          <option value="low">Low</option>
+          <option value="medium" selected>Medium</option>
+          <option value="high">High</option>
+        </select>
+        <select id="categorySelect" class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600">
+          <option value="personal" selected>Personal</option>
+          <option value="work">Work</option>
+          <option value="study">Study</option>
+          <option value="health">Health</option>
+          <option value="urgent">Urgent</option>
+        </select>
+        <input id="dueDateInput" type="datetime-local" class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+        <div class="flex items-center space-x-4 lg:col-span-5">
+          <button id="addTaskBtn" type="submit" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition">Add Task</button>
+          <div id="loadingSpinner" class="spinner hidden"></div>
+        </div>
+      </form>
+    </section>
+
+    <!-- Filters, Sort, and Controls -->
+    <section class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg p-6 rounded-xl shadow-xl mb-8">
+      <div class="flex flex-wrap gap-2 mb-4 justify-center sm:justify-start">
+        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-blue-500 hover:text-white transition" data-filter="all">All</button>
+        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-blue-500 hover:text-white transition" data-filter="active">Active</button>
+        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-blue-500 hover:text-white transition" data-filter="completed">Completed</button>
+        <button class="filter-btn px-4 py-2 rounded-lg bg-gray-200 dark:bg-gray-600 hover:bg-blue-500 hover:text-white transition" data-filter="high">High Priority</button>
+      </div>
+      <div class="flex flex-wrap gap-4 justify-center sm:justify-between items-center">
+        <div class="flex gap-2 flex-wrap justify-center">
+          <button id="sortByDate" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-green-500 hover:text-white transition whitespace-nowrap">Sort by Date</button>
+          <button id="sortByPriority" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-green-500 hover:text-white transition whitespace-nowrap">Sort by Priority</button>
+          <button id="sortByCategory" class="px-4 py-2 bg-gray-200 dark:bg-gray-600 rounded-lg hover:bg-green-500 hover:text-white transition whitespace-nowrap">Sort by Category</button>
+        </div>
+        <div class="flex gap-2 flex-wrap justify-center">
+          <button id="selectAllBtn" class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition whitespace-nowrap">Select All</button>
+          <button id="batchDeleteBtn" class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition whitespace-nowrap hidden">Delete Selected</button>
+          <button id="batchCompleteBtn" class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition whitespace-nowrap hidden">Mark Complete</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Task List -->
+    <div id="todoList" class="task-grid"></div>
+  </div>
+
+  <!-- Contact Section -->
+  <section id="contact" class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg p-6 rounded-xl shadow-xl mt-8 max-w-7xl mx-auto">
+    <h2 class="text-2xl font-semibold mb-4">Contact Me</h2>
+    <form id="contactForm" class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <input type="text" name="from_name" placeholder="Your Name" class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+      <input type="email" name="from_email" placeholder="Your Email" class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600" required />
+      <input type="text" name="subject" placeholder="Subject" class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+      <input type="text" name="phone" placeholder="Phone" class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600" />
+      <textarea name="message" placeholder="Your Message" class="p-3 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 resize-none lg:col-span-5" rows="4" required></textarea>
+      <div class="lg:col-span-5 flex justify-end">
+        <button type="submit" class="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:from-blue-600 hover:to-blue-700 transition">Send Message</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Developer Section -->
+  <section id="developer" class="bg-white/90 dark:bg-gray-800/90 backdrop-blur-lg p-6 rounded-xl shadow-xl mt-8 max-w-7xl mx-auto">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-center">
+      <div class="text-center lg:text-left">
+        <img src="./Tolistapp/Deepak .jpg" alt="Developer" class="w-28 h-28 rounded-full mx-auto lg:mx-0 mb-4 shadow-lg" />
+        <h2 class="text-2xl font-semibold">Deepak Singh</h2>
+        <p class="text-gray-600 dark:text-gray-300 mt-2">Data Analyst | ML Enthusiast | Power BI Developer</p>
+        <p class="mt-4 text-sm text-gray-500 dark:text-gray-400">I build intelligent systems, dashboards, and AI projects. Passionate about coding, analytics, and problem-solving.</p>
+        <div class="mt-4 flex justify-center lg:justify-start gap-4">
+          <a href="https://1908deepak.vercel.app/" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">Portfolio</a>
+          <a href="https://github.com/1908Deepak" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">GitHub</a>
+          <a href="https://www.linkedin.com/in/1908deepak/" target="_blank" class="text-blue-600 dark:text-blue-400 hover:underline">LinkedIn</a>
+          <a href="mailto:deepaksingh190810@example.com" class="text-blue-600 dark:text-blue-400 hover:underline">Email</a>
+        </div>
+      </div>
+      <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg shadow-md">
+        <h3 class="text-lg font-semibold mb-3">Key Skills</h3>
+        <ul class="list-disc list-inside text-gray-600 dark:text-gray-300 space-y-1">
+          <li>Python, Java, JavaScript</li>
+          <li>Machine Learning & AI</li>
+          <li>Data Analytics (Power BI, Tableau, Excel)</li>
+          <li>Web Development (HTML, Flask)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- EmailJS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3/dist/email.min.js"></script>
+  <script>
+    (function(){
+      emailjs.init("PUBLIC_KEY"); // Replace with your EmailJS Public Key
+    })();
+  </script>
+
+  <script src="./Tolistapp/app.js"></script>
+</body>
+</html>
